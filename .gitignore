@@ -1,3 +1,4 @@
+*.gguf
 .DS_Store
 DerivedData/
 Prod/
