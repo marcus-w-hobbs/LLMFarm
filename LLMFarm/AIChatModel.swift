@@ -142,9 +142,9 @@ final class AIChatModel: ObservableObject {
         }
     }
     
-    public func hard_reload_chat(){
+    public func hard_reload_chat() {
         self.remove_dump_state()
-        if self.chat != nil && self.chat?.model != nil{
+        if self.chat != nil && self.chat?.model != nil {
             self.chat!.model!.contextParams.save_load_state = false
         }
         self.chat = nil
@@ -435,7 +435,7 @@ final class AIChatModel: ObservableObject {
     }
     
     public func check_stop_words(_ token:String,_ message_text: inout String) -> Bool{
-        var check = true
+        let check = true
         for stop_word in self.chat?.model?.contextParams.reverse_prompt ?? []{
             if token == stop_word {
                 return false
@@ -587,22 +587,18 @@ final class AIChatModel: ObservableObject {
         if useRag {
             self.state = .ragIndexLoading
             self.generateRagLLMQuery(in_text,
-                                    self.ragTop, self.ragUrl,
-                                    message: in_text,
-                                    append_user_message:append_user_message,
-                                    system_prompt:system_prompt,
-                                    attachment: attachment,
-                                    attachment_type:attachment_type)
+                                     self.ragTop, self.ragUrl,
+                                     message: in_text,
+                                     append_user_message:append_user_message,
+                                     system_prompt:system_prompt,
+                                     attachment: attachment,
+                                     attachment_type:attachment_type)
             return
         }
         
+        self.AI_typing += 1
         
-        self.AI_typing += 1    
-        
-        
-       
-        
-        if self.chat?.model?.context == nil{
+        if self.chat?.model?.context == nil {
             self.state = .loading
             title_backup = Title
             Title = "loading..."
