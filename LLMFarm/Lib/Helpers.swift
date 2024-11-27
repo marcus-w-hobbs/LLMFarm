@@ -13,7 +13,8 @@ import SimilaritySearchKitDistilbert
 import SimilaritySearchKitMiniLMAll
 import SimilaritySearchKitMiniLMMultiQA
 
-let demo_model_name = "Pythia410m-V0-Instruct.Q6_K_split.gguf-00001-of-00004.gguf"
+//let demo_model_name = "Pythia410m-V0-Instruct.Q6_K_split.gguf-00001-of-00004.gguf"
+let demo_model_name = "Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf"
 
 func parse_model_setting_template(template_path:String) -> ChatSettingsTemplate{
     var tmp_template:ChatSettingsTemplate = ChatSettingsTemplate()
@@ -154,7 +155,6 @@ func getChunkMethodFromStr(_ modelStr: String) -> TextSplitterType{
         return TextSplitterType.recursive
     }
 }
-
 
 
 func getFileURLFormPathStr(dir:String,filename: String) -> URL {

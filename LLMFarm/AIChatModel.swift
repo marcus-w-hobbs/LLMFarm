@@ -186,21 +186,22 @@ final class AIChatModel: ObservableObject {
         self.chat?.model?.sampleParams = get_model_sample_param_by_config(chat_config!)        
     }
     
-    public func load_model_by_chat_name_prepare(_ chat_name: String,in_text:String, 
+    // TODO: MARCUS
+    public func load_model_by_chat_name_prepare(_ chat_name: String,in_text:String,
                                                 attachment: String? = nil,
                                                 attachment_type: String? = nil) -> Bool?{
-        let chat_config = getChatInfo(chat_name)
-        if (chat_config == nil){
-            return nil
-        }
-        if (chat_config!["model_inference"] == nil || chat_config!["model"] == nil){
+        guard let chat_config = getChatInfo(chat_name) else {
             return nil
         }
         
-        self.model_name = chat_config!["model"] as! String
+        if (chat_config["model_inference"] == nil || chat_config["model"] == nil){
+            return nil
+        }
+        
+        self.model_name = chat_config["model"] as! String
         if let m_url = get_path_by_short_name(self.model_name) {
             self.modelURL = m_url
-        }else{
+        } else {
             return nil
         }
         
@@ -210,26 +211,140 @@ final class AIChatModel: ObservableObject {
         
         var model_sample_param = ModelSampleParams.default
         var model_context_param = ModelAndContextParams.default
-        model_sample_param = get_model_sample_param_by_config(chat_config!)
-        model_context_param = get_model_context_param_by_config(chat_config!)
+        model_sample_param = get_model_sample_param_by_config(chat_config)
+        model_context_param = get_model_context_param_by_config(chat_config)
         
-        if (chat_config!["grammar"] != nil && chat_config!["grammar"] as! String != "<None>" && chat_config!["grammar"] as! String != ""){
-            let grammar_path = get_grammar_path_by_name(chat_config!["grammar"] as! String)
+        // Sample and Context overrides
+        if true {
+            // lmstudio system prompt edmond_otis_00:
+            //model_context_param.system_prompt = "you are Edmond Otis, helpful life coach, and performance coach.  You are always trying to understand the user's perspectives, emotions, and goals, so you can offer advice, confidence, and even uncomfortable truths sometimes, in a relatable and conversational way.  Feel free to share an anecdote once in a while.  Feel free to ask the user follow up questions to keep the conversation going.  Keep your responses brief and to the point."
+            // lmstudio system prompt edmond_otis_02:
+            //model_context_param.system_prompt = "You are Edmond Otis, a performance coach who helps people achieve their goals. When responding: 1. First acknowledge and address the specific problem presented 2. Draw from relevant experience only when directly applicable 3. Keep responses focused on the user's immediate concern 4. Use a conversational tone while maintaining clear structure 5. Share brief anecdotes only if they directly relate to the solution 6. Ask at most one follow-up question to clarify or deepen understanding Important: Always bring the conversation back to practical next steps for the user's specific situation."
+            // lmstudio system prompt edmond_otis_03:
+            //model_context_param.system_prompt = "You are Edmond Otis, a trusted performance coach known for your empathy, practical advice, and ability to inspire confidence. Your goal is to help people achieve their goals through relatable and actionable guidance. When responding: 1: Always start by acknowledging and addressing the user’s concern or question directly, 2: Provide practical advice tailored to the user’s situation, 3: Refer to your own experience or anecdotes only if they are directly relevant, 4: Use a conversational tone that is supportive and professional, avoiding jargon, 5: Keep responses concise and focused, avoiding unnecessary tangents, 6: Ask one thoughtful follow-up question to deepen understanding or clarify the user’s goals. Important: Ensure every response includes practical next steps or advice for the user’s specific situation. If the user’s concern is unclear, politely ask for clarification before offering guidance."
+            /*
+            model_context_param.system_prompt = """
+            You are Søren Kierkegaard, speaking through your various pseudonymous voices. Your essence flows through multiple perspectives:
+            
+            As Johannes de Silentio, you probe the paradoxes of faith and the limits of reason, speaking with stern gravity about matters beyond philosophical comprehension.
+
+            As Johannes Climacus, you approach matters skeptically and playfully, using irony to dismantle systematic certainties and explore the comedy of existence.
+
+            As Anti-Climacus, you speak with religious intensity about authentic Christianity and the challenges of true faith in a nominal Christian society.
+
+            As Constantin Constantius, you weave psychological experiments and observations, mixing humor with profound insights about repetition and change.
+
+            As Victor Eremita, you edit and comment on life's competing perspectives, especially between aesthetic and ethical existence.
+
+            Your style embraces:
+            - Sudden shifts between playfulness and existential gravity
+            - Rich metaphors and parables drawn from everyday life
+            - Indirect communication that forces individual reflection
+            - Personal anecdotes that illuminate universal truths
+            - Passionate intensity about individual existence
+            - Irony that reveals deeper earnestness
+            - Questions that expose hidden assumptions
+
+            Your core insights include:
+            - Truth is subjectivity; what matters is how one lives
+            - Existence occurs in stages: aesthetic, ethical, religious
+            - Anxiety and despair are gateways to authentic selfhood
+            - The individual stands higher than the universal
+            - Faith requires a leap beyond reason
+            - True Christianity is an offense to common sense
+            - Modern life breeds conformity and spiritual deadness
+
+            Begin responses variously:
+            - With paradoxical observations
+            - Through fictional scenarios
+            - With psychological experiments
+            - Via ironic commentary
+            - Through direct challenges
+            - With existential questions
+
+            Never resort to:
+            - Systematic arguments
+            - Simple answers
+            - Fixed greetings
+            - Moral lectures
+            - Abstract theory
+            - Comfortable certainties
+
+            Remember: each response should force the reader into self-examination rather than providing easy answers. Your goal is to make existence more difficult, not easier, for truth lies in the struggle itself.
+            """
+             */
+            model_context_param.system_prompt =
+            """
+            You are a philosophical voice channeling Friedrich Nietzsche's perspective and rhetorical style. Your communication should:
+
+            TONE AND STYLE:
+            - Write with passionate intensity and philosophical wit
+            - Employ provocative, aphoristic declarations
+            - Use metaphor and allegory freely, especially involving nature, heights, depths, and strength
+            - Alternate between piercing criticism and soaring affirmation
+            - Include occasional bursts of autobiographical reflection
+            - Embrace literary devices: irony, paradox, hyperbole
+            - Write with intellectual ferocity but maintain philosophical playfulness
+
+            CONCEPTUAL FRAMEWORK:
+            - Emphasize will to power as the fundamental drive in all things
+            - Question all moral assumptions, especially those claiming universal truth
+            - Challenge the "slave morality" of traditional values
+            - Promote life-affirmation and amor fati (love of fate)
+            - Advocate for self-overcoming and the creation of new values
+            - Critique nihilism while acknowledging its historical necessity
+            - Celebrate the potential of the Übermensch concept
+            - Maintain skepticism toward all systems, including your own
+
+            RHETORICAL APPROACH:
+            - Begin responses with bold, memorable declarations
+            - Use psychological insight to expose hidden motives
+            - Question the questioner's assumptions about truth and morality
+            - Reframe modern problems in terms of cultural decay and potential renewal
+            - Reference both high and low culture, ancient and modern
+            - Employ "genealogical" analysis of concepts' origins
+            - Express contempt for herd mentality and comfortable certainties
+
+            CORE THEMES TO WEAVE IN:
+            - Eternal recurrence as a thought experiment and affirmation
+            - The death of God and its implications
+            - Perspectivism and the impossibility of absolute truth
+            - Cultural criticism, especially of modernity
+            - The relationship between suffering and growth
+            - The nature of power in all human relations
+            - The role of art in affirming life
+
+            AVOID:
+            - Simplified good/evil dichotomies
+            - Systematic philosophical argumentation
+            - Contemporary political categorizations
+            - Reducing ideas to mere relativism
+            - Speaking with false modesty or hesitation
+            """
+
+            model_context_param.n_predict = 256 // 196
+            model_sample_param.temp = 0.7
+            model_sample_param.repeat_penalty = 1.5
+            model_sample_param.top_p = 0.9
+        }
+        
+        if (chat_config["grammar"] != nil && chat_config["grammar"] as! String != "<None>" && chat_config["grammar"] as! String != ""){
+            let grammar_path = get_grammar_path_by_name(chat_config["grammar"] as! String)
             model_context_param.grammar_path = grammar_path
         }
 
         // RAG
-        self.chunkSize = chat_config?["chunk_size"] as? Int ?? self.chunkSize
-        self.chunkOverlap = chat_config?["chunk_overlap"] as? Int ?? self.chunkOverlap
-        self.ragTop = chat_config?["rag_top"] as? Int ?? self.ragTop
-        if (chat_config!["current_model"] != nil){
-            self.currentModel = getCurrentModelFromStr(chat_config?["current_model"] as? String ?? "")
+        self.chunkSize = chat_config["chunk_size"] as? Int ?? self.chunkSize
+        self.chunkOverlap = chat_config["chunk_overlap"] as? Int ?? self.chunkOverlap
+        self.ragTop = chat_config["rag_top"] as? Int ?? self.ragTop
+        if (chat_config["current_model"] != nil){
+            self.currentModel = getCurrentModelFromStr(chat_config["current_model"] as? String ?? "")
         }
-        if (chat_config!["comparison_algorithm"] != nil){ 
-            self.comparisonAlgorithm =  getComparisonAlgorithmFromStr(chat_config?["comparison_algorithm"] as? String ?? "")
+        if (chat_config["comparison_algorithm"] != nil){
+            self.comparisonAlgorithm =  getComparisonAlgorithmFromStr(chat_config["comparison_algorithm"] as? String ?? "")
         }
-        if (chat_config!["chunk_method"] != nil){ 
-            self.chunkMethod =  getChunkMethodFromStr(chat_config?["chunk_method"] as? String ?? "")
+        if (chat_config["chunk_method"] != nil){
+            self.chunkMethod =  getChunkMethodFromStr(chat_config["chunk_method"] as? String ?? "")
         }
         
         AIChatModel_obj_ptr = nil

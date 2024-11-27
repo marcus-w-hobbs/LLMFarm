@@ -114,6 +114,7 @@
 		15F210962A1920AA0021F414 /* AIChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F210922A1920AA0021F414 /* AIChatModel.swift */; };
 		15F210AA2A1A659B0021F414 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F210A92A1A659B0021F414 /* Helpers.swift */; };
 		15FB67422B1BDB0800174379 /* ExportLoraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15FB67412B1BDB0800174379 /* ExportLoraView.swift */; };
+		F41ACBDA2CE8000B0074294D /* Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf in Resources */ = {isa = PBXBuildFile; fileRef = F41ACBD92CE8000B0074294D /* Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -271,6 +272,7 @@
 		E61E38F329B1F0BA00114C15 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		E61E38F529B1F12E00114C15 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		E624E2102958F21E00996CD1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F41ACBD92CE8000B0074294D /* Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -414,6 +416,7 @@
 		15A3EDBD2A2121D90030AF5A /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				F41ACBD92CE8000B0074294D /* Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf */,
 				1533934E2C405308009E0705 /* Pythia410m-V0-Instruct.Q6_K_split.gguf-00001-of-00004.gguf */,
 				153393502C405313009E0705 /* Pythia410m-V0-Instruct.Q6_K_split.gguf-00002-of-00004.gguf */,
 				153393512C40531A009E0705 /* Pythia410m-V0-Instruct.Q6_K_split.gguf-00003-of-00004.gguf */,
@@ -769,6 +772,7 @@
 				158172C52BC5B1480078DCDA /* StableLM-3B-4E1T.json in Resources */,
 				158172C22BC5B1480078DCDA /* phi2.json in Resources */,
 				1532BF7C2AA113AD006DC514 /* RWKV-4 Raven Eng.json in Resources */,
+				F41ACBDA2CE8000B0074294D /* Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf in Resources */,
 				15C08A6A2BA5CB2C000A1BE0 /* MobileVLM.json in Resources */,
 				153393532C40531A009E0705 /* Pythia410m-V0-Instruct.Q6_K_split.gguf-00004-of-00004.gguf in Resources */,
 				153393522C40531A009E0705 /* Pythia410m-V0-Instruct.Q6_K_split.gguf-00001-of-00004.gguf in Resources */,
@@ -986,7 +990,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_ASSET_PATHS = "\"LLMFarm/Preview Content\"";
-				DEVELOPMENT_TEAM = C66ZA422A7;
+				DEVELOPMENT_TEAM = SRQ2NMN97G;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = NO;
@@ -1012,7 +1016,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
 				MARKETING_VERSION = 1.4.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.guinmoon.LLMFarm;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcussatellite.LLMFarm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
@@ -1039,7 +1043,7 @@
 				CURRENT_PROJECT_VERSION = 14;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"LLMFarm/Preview Content\"";
-				DEVELOPMENT_TEAM = C66ZA422A7;
+				DEVELOPMENT_TEAM = SRQ2NMN97G;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = NO;
@@ -1064,7 +1068,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
 				MARKETING_VERSION = 1.4.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.guinmoon.LLMFarm;
+				PRODUCT_BUNDLE_IDENTIFIER = com.marcussatellite.LLMFarm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
