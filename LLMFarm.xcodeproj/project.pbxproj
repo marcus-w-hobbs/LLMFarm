@@ -115,6 +115,7 @@
 		15F210AA2A1A659B0021F414 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F210A92A1A659B0021F414 /* Helpers.swift */; };
 		15FB67422B1BDB0800174379 /* ExportLoraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15FB67412B1BDB0800174379 /* ExportLoraView.swift */; };
 		F41ACBDA2CE8000B0074294D /* Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf in Resources */ = {isa = PBXBuildFile; fileRef = F41ACBD92CE8000B0074294D /* Llama-3.2-3B-Instruct-unsloth-Q4_K_M-IZ-05.gguf */; };
+		F49261142CFFB7B700305FE1 /* Inject in Frameworks */ = {isa = PBXBuildFile; productRef = F49261132CFFB7B700305FE1 /* Inject */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -316,6 +317,7 @@
 				15DFE60A2CC545D500E359F9 /* SimilaritySearchKitMiniLMMultiQA in Frameworks */,
 				15DFE6062CC545D500E359F9 /* SimilaritySearchKitDistilbert in Frameworks */,
 				15A3EDD82A223CB00030AF5A /* Accelerate.framework in Frameworks */,
+				F49261142CFFB7B700305FE1 /* Inject in Frameworks */,
 				1554ABC02C26D75900A0513F /* NetworkImage in Frameworks */,
 				150992D32CC3AD8700B84BDB /* llmfarm_core in Frameworks */,
 				1554ABBD2C26D37000A0513F /* MarkdownUI in Frameworks */,
@@ -679,6 +681,7 @@
 				15DFE6052CC545D500E359F9 /* SimilaritySearchKitDistilbert */,
 				15DFE6072CC545D500E359F9 /* SimilaritySearchKitMiniLMAll */,
 				15DFE6092CC545D500E359F9 /* SimilaritySearchKitMiniLMMultiQA */,
+				F49261132CFFB7B700305FE1 /* Inject */,
 			);
 			productName = LLMFarm;
 			productReference = 15F2107E2A191B190021F414 /* LLMFarm.app */;
@@ -722,6 +725,7 @@
 				150992C92CC3AC4100B84BDB /* XCLocalSwiftPackageReference "swift-markdown-ui" */,
 				150992CF2CC3AD4F00B84BDB /* XCLocalSwiftPackageReference "llmfarm_core.swift" */,
 				15DFE6022CC545D500E359F9 /* XCLocalSwiftPackageReference "similarity-search-kit" */,
+				F49261122CFFB7B700305FE1 /* XCRemoteSwiftPackageReference "Inject" */,
 			);
 			productRefGroup = E624E1FF2958ECC800996CD1 /* Products */;
 			projectDirPath = "";
@@ -1016,6 +1020,10 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
 				MARKETING_VERSION = 1.4.1;
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-interposable",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.marcussatellite.LLMFarm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1266,6 +1274,17 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		F49261122CFFB7B700305FE1 /* XCRemoteSwiftPackageReference "Inject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzysztofzablocki/Inject";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		150992C72CC3AC2F00B84BDB /* NetworkImage */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1326,6 +1345,11 @@
 		15DFE6092CC545D500E359F9 /* SimilaritySearchKitMiniLMMultiQA */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SimilaritySearchKitMiniLMMultiQA;
+		};
+		F49261132CFFB7B700305FE1 /* Inject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F49261122CFFB7B700305FE1 /* XCRemoteSwiftPackageReference "Inject" */;
+			productName = Inject;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

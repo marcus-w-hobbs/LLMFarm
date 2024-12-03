@@ -12,5 +12,9 @@
         "ggml_d925ed-alloc.h": "c",
         "ggml_d925ed.h": "c",
         "assert.h": "c"
-    }
+    },
+    "[swift]": {
+        "editor.defaultFormatter": "sweetpad.sweetpad",
+        "editor.formatOnSave": true,
+  }
 }

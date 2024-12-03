@@ -6,69 +6,69 @@
 //
 
 import Foundation
-//
 
+//
 
 class OutputListener {
-    /// consumes the messages on STDOUT
-    let inputPipe = Pipe()
+  /// consumes the messages on STDOUT
+  let inputPipe = Pipe()
 
-    /// outputs messages back to STDOUT
-    let outputPipe = Pipe()
+  /// outputs messages back to STDOUT
+  let outputPipe = Pipe()
 
-    /// Buffers strings written to stdout
-    var contents = ""
-    init(){
-        let outPipe = Pipe()
-        var outString = "Initial"
-        let sema = DispatchSemaphore(value: 0)
-        outPipe.fileHandleForReading.readabilityHandler = { fileHandle in
-            let data = fileHandle.availableData
-            if data.isEmpty  { // end-of-file condition
-                fileHandle.readabilityHandler = nil
-                sema.signal()
-            } else {
-                outString += String(data: data,  encoding: .utf8)!
-            }
-        }
-        print("Starting")
-
-        // Redirect
-        setvbuf(stdout, nil, _IONBF, 0)
-        let savedStdout = dup(STDERR_FILENO)
-        dup2(outPipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+  /// Buffers strings written to stdout
+  var contents = ""
+  init() {
+    let outPipe = Pipe()
+    var outString = "Initial"
+    let sema = DispatchSemaphore(value: 0)
+    outPipe.fileHandleForReading.readabilityHandler = { fileHandle in
+      let data = fileHandle.availableData
+      if data.isEmpty {  // end-of-file condition
+        fileHandle.readabilityHandler = nil
+        sema.signal()
+      } else {
+        outString += String(data: data, encoding: .utf8)!
+      }
     }
-//    init() {
-//        // Set up a read handler which fires when data is written to our inputPipe
-//        inputPipe.fileHandleForReading.readabilityHandler = { [weak self] fileHandle in
-//            guard let strongSelf = self else { return }
-//
-//            let data = fileHandle.availableData
-//            if let string = String(data: data, encoding: String.Encoding.utf8) {
-//                strongSelf.contents += string
-//            }
-//
-//            // Write input back to stdout
-//            strongSelf.outputPipe.fileHandleForWriting.write(data)
-//        }
-//    }
-//
-//    func openConsolePipe() {
-//        // Copy STDOUT file descriptor to outputPipe for writing strings back to STDOUT
-//        dup2(stdoutFileDescriptor, outputPipe.fileHandleForWriting.fileDescriptor)
-//
-//        // Intercept STDOUT with inputPipe
-//        dup2(inputPipe.fileHandleForWriting.fileDescriptor, stdoutFileDescriptor)
-//    }
-//
-//    func closeConsolePipe() {
-//        // Restore stdout
-//        freopen("/dev/stdout", "a", stdout)
-//
-//        [inputPipe.fileHandleForReading, outputPipe.fileHandleForWriting].forEach { file in
-//            file.closeFile()
-//        }
-//    }
+    print("Starting")
+
+    // Redirect
+    setvbuf(stdout, nil, _IONBF, 0)
+    let savedStdout = dup(STDERR_FILENO)
+    dup2(outPipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+  }
+  //    init() {
+  //        // Set up a read handler which fires when data is written to our inputPipe
+  //        inputPipe.fileHandleForReading.readabilityHandler = { [weak self] fileHandle in
+  //            guard let strongSelf = self else { return }
+  //
+  //            let data = fileHandle.availableData
+  //            if let string = String(data: data, encoding: String.Encoding.utf8) {
+  //                strongSelf.contents += string
+  //            }
+  //
+  //            // Write input back to stdout
+  //            strongSelf.outputPipe.fileHandleForWriting.write(data)
+  //        }
+  //    }
+  //
+  //    func openConsolePipe() {
+  //        // Copy STDOUT file descriptor to outputPipe for writing strings back to STDOUT
+  //        dup2(stdoutFileDescriptor, outputPipe.fileHandleForWriting.fileDescriptor)
+  //
+  //        // Intercept STDOUT with inputPipe
+  //        dup2(inputPipe.fileHandleForWriting.fileDescriptor, stdoutFileDescriptor)
+  //    }
+  //
+  //    func closeConsolePipe() {
+  //        // Restore stdout
+  //        freopen("/dev/stdout", "a", stdout)
+  //
+  //        [inputPipe.fileHandleForReading, outputPipe.fileHandleForWriting].forEach { file in
+  //            file.closeFile()
+  //        }
+  //    }
 }
 
 //func openConsolePipe() {
