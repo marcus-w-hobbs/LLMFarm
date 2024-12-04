@@ -86,7 +86,7 @@ struct ChatView: View {
     if chatSelection == nil {
       return
     }
-    print(chatSelection)
+    print(chatSelection!)
     print("\nreload\n")
     aiChatModel.reload_chat(chatSelection!)
   }
@@ -179,7 +179,7 @@ struct ChatView: View {
           if selection == nil {
             CloseChat()
           } else {
-            print(selection)
+            print(selection!)
             chatStyle = selection!["chat_style"] as String? ?? "none"
             await self.reload()
           }

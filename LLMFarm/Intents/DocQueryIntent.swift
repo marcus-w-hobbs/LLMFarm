@@ -65,7 +65,7 @@ struct LLMDocQueryIntent: AppIntent {
       let ragUrl =
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
         .appendingPathComponent(ragDir) ?? URL(fileURLWithPath: "")
-      let newPath = CopyFileToSandbox(url: docUrl!.fileURL!, dest: docsDir)
+      //let newPath = CopyFileToSandbox(url: docUrl!.fileURL!, dest: docsDir)
       await addFileToIndex(
         fileURL: docUrl!.fileURL!, ragURL: ragUrl,
         currentModel: getCurrentModelFromStr(chat_config?["current_model"] as? String ?? ""),

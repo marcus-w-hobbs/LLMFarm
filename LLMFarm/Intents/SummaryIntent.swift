@@ -29,7 +29,7 @@ struct LLMSummaryIntent: AppIntent {
   @MainActor
   func perform() async throws -> some IntentResult & ReturnsValue<String> {
 
-    var img_path: String? = nil
+    let img_path: String? = nil
 
     if query == nil {
       return .result(value: "Query is empty.")

@@ -22,7 +22,7 @@ func OneShortQuery(
   topRag: Int = 1
 ) async -> String {
   var result: String = ""
-  var aiChatModel = AIChatModel()
+  let aiChatModel = AIChatModel()
   aiChatModel.chat_name = chat
   aiChatModel.ResetRAGUrl()
   var query = queryIn
