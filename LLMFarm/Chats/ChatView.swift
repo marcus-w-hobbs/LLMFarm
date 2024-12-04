@@ -8,10 +8,9 @@ import Inject
 import SwiftUI
 
 struct ChatView: View {
-  @ObserveInjection var inject
-
-  @EnvironmentObject var aiChatModel: AIChatModel
-  @EnvironmentObject var orientationInfo: OrientationInfo
+  @ObserveInjection var inject  // For hot reloading during development
+  @EnvironmentObject var aiChatModel: AIChatModel  // Main chat model
+  @EnvironmentObject var orientationInfo: OrientationInfo  // Device orientation info
 
   // #if os(iOS)
   @State var placeholderString: String = "Type your message..."
@@ -267,6 +266,7 @@ struct ChatView: View {
         #endif
     }
     .textSelection(.enabled)
+    .preferredColorScheme(.light)
     .enableInjection()
   }
 }
