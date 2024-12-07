@@ -1,3 +1,6 @@
+import SwiftUI
+import UniformTypeIdentifiers
+
 /// DownloadModelsView manages the model download UI while carefully tracking memory and context window implications
 ///
 /// This view orchestrates the critical task of downloading and managing large language models while providing:

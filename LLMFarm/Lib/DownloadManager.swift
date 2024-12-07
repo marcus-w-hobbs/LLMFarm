@@ -8,6 +8,7 @@
 import Foundation
 
 /// Manages downloading, deleting and checking status of files
+@available(iOS 17.0, *)
 @Observable final class DownloadManager {
   /// Whether a download is currently in progress
   var isDownloading = false
