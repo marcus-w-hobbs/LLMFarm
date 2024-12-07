@@ -7,10 +7,16 @@
 
 import Foundation
 
-final class DownloadManager: ObservableObject {
-  @Published var isDownloading = false
-  @Published var isDownloaded = false
+/// Manages downloading, deleting and checking status of files
+@Observable final class DownloadManager {
+  /// Whether a download is currently in progress
+  var isDownloading = false
+  
+  /// Whether the target file has been downloaded
+  var isDownloaded = false
 
+  /// Downloads a video file from a remote URL to the documents directory
+  /// - Note: If the file already exists locally, the download will be skipped
   func downloadFile() {
     print("downloadFile")
     isDownloading = true
@@ -64,6 +70,8 @@ final class DownloadManager: ObservableObject {
     }
   }
 
+  /// Deletes the downloaded video file from the documents directory
+  /// - Note: If the file doesn't exist, this operation is a no-op
   func deleteFile() {
     let docsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
 
@@ -80,6 +88,7 @@ final class DownloadManager: ObservableObject {
     }
   }
 
+  /// Checks if the video file exists in the documents directory and updates `isDownloaded` accordingly
   func checkFileExists() {
     let docsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
 
@@ -95,6 +104,7 @@ final class DownloadManager: ObservableObject {
     }
   }
 
+  // Commented out AVPlayer functionality
   //    func getVideoFileAsset() -> AVPlayerItem? {
   //        let docsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
   //

@@ -1,24 +1,26 @@
 //
 //  MessageView.swift
-//  AlpacaChatApp
+//  LLMFarm
 //
-//  Created by Yoshimasa Niwa on 3/20/23.
+//  A view that displays a single chat message with sender info, content, and status
 //
 
 import Inject
 import MarkdownUI
 import SwiftUI
 
+/// Displays a single chat message with sender info, content and status
 struct MessageView: View {
-  @ObserveInjection var inject
+  @ObserveInjection var inject  // Enables hot reloading during development
 
-  var message: Message
-  @Binding var chatStyle: String
-  @State var status: String?
+  var message: Message  // The message to display
+  @Binding var chatStyle: String  // Style to use for markdown rendering
+  @State var status: String?  // Optional status text to display
 
+  /// Displays the sender name/type for a message
   private struct SenderView: View {
     var sender: Message.Sender
-    var current_model = "LLM"
+    var current_model = "LLM"  // Name of the current AI model
 
     var body: some View {
       switch sender {
@@ -27,7 +29,7 @@ struct MessageView: View {
           .font(.caption)
           .foregroundColor(.accentColor)
       case .user_rag:
-        Text("RAG")
+        Text("RAG")  // Indicates message uses RAG context
           .font(.caption)
           .foregroundColor(.accentColor)
       case .system:
@@ -38,16 +40,17 @@ struct MessageView: View {
     }
   }
 
+  /// Displays the actual message content based on its state
   private struct MessageContentView: View {
     var message: Message
     @Binding var chatStyle: String
     @Binding var status: String?
     var sender: Message.Sender
-    @State var showRag = false
+    @State var showRag = false  // Controls visibility of RAG context
 
     var body: some View {
       switch message.state {
-      case .none:
+      case .none:  // Initial loading state
         VStack(alignment: .leading) {
           ProgressView()
           if status != nil {
@@ -56,12 +59,12 @@ struct MessageView: View {
           }
         }
 
-      case .error:
+      case .error:  // Error state shows red text
         Text(message.text)
           .foregroundColor(Color.red)
           .textSelection(.enabled)
 
-      case .typed:
+      case .typed:  // Regular message state
         VStack(alignment: .leading) {
           if message.header != "" {
             Text(message.header)
@@ -87,7 +90,6 @@ struct MessageView: View {
                 }
               )
               .buttonStyle(.borderless)
-              //                        .frame(maxWidth:50,maxHeight: 50)
               if showRag {
                 Text(LocalizedStringKey(message.text)).font(.footnote).textSelection(.enabled)
               }
@@ -98,7 +100,7 @@ struct MessageView: View {
           }
         }.textSelection(.enabled)
 
-      case .predicting:
+      case .predicting:  // Shows loading indicator while generating response
         HStack {
           Text(message.text).textSelection(.enabled)
           ProgressView()
@@ -106,7 +108,7 @@ struct MessageView: View {
             .frame(maxHeight: .infinity, alignment: .bottom)
         }.textSelection(.enabled)
 
-      case .predicted(let totalSecond):
+      case .predicted(let totalSecond):  // Shows completed message with timing stats
         VStack(alignment: .leading) {
           switch chatStyle {
           case "DocC":
@@ -128,6 +130,7 @@ struct MessageView: View {
 
   var body: some View {
     HStack {
+      // Right-align user messages, left-align system messages
       if message.sender == .user {
         Spacer()
       }
@@ -153,6 +156,7 @@ struct MessageView: View {
   }
 }
 
+// Preview provider commented out but available for testing
 // struct MessageView_Previews: PreviewProvider {
 //     static var previews: some View {
 //         VStack {

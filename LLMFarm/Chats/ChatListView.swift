@@ -4,31 +4,35 @@
 //
 //  Created by Shezad Ahamed on 05/08/21.
 //
+// A view that displays a list of chats and provides functionality to manage them
 
 import Inject
 import SwiftUI
 
 struct ChatListView: View {
+  // Enable hot reloading during development
   @ObserveInjection var inject
 
-  @EnvironmentObject var fineTuneModel: FineTuneModel
-  @EnvironmentObject var aiChatModel: AIChatModel
+  // Environment objects for model state
+  @EnvironmentObject var fineTuneModel: FineTuneModel // Manages fine-tuning settings
+  @EnvironmentObject var aiChatModel: AIChatModel // Manages chat state and AI interactions
 
-  @State var searchText: String = ""
-  @Binding var tabSelection: Int
-  @Binding var model_name: String
-  @Binding var title: String
-  @Binding var add_chat_dialog: Bool
-  var close_chat: () -> Void
-  @Binding var edit_chat_dialog: Bool
-  //    @Binding var chat_selection: String?
-  @Binding var chat_selection: [String: String]?
-  @Binding var after_chat_edit: () -> Void
-  @State var chats_previews: [[String: String]] = []
-  @State var current_detail_view_name: String? = "Chat"
-  @State private var toggleSettings = false
-  @State private var toggleAddChat = false
+  // View state
+  @State var searchText: String = "" // Search filter text
+  @Binding var tabSelection: Int // Currently selected tab
+  @Binding var model_name: String // Name of the selected AI model
+  @Binding var title: String // Title of the current chat
+  @Binding var add_chat_dialog: Bool // Controls visibility of add chat dialog
+  var close_chat: () -> Void // Callback to close current chat
+  @Binding var edit_chat_dialog: Bool // Controls visibility of edit chat dialog
+  @Binding var chat_selection: [String: String]? // Currently selected chat
+  @Binding var after_chat_edit: () -> Void // Callback after editing a chat
+  @State var chats_previews: [[String: String]] = [] // List of chat previews
+  @State var current_detail_view_name: String? = "Chat" // Name of current detail view
+  @State private var toggleSettings = false // Controls settings sheet visibility
+  @State private var toggleAddChat = false // Controls add chat sheet visibility
 
+  // Refreshes the list of chats from storage
   func refresh_chat_list() {
     if is_first_run() {
       create_demo_chat()
@@ -37,18 +41,21 @@ struct ChatListView: View {
     aiChatModel.update_chat_params()
   }
 
+  // Deletes chats at specified offsets in the list
   func Delete(at offsets: IndexSet) {
     let chatsToDelete = offsets.map { self.chats_previews[$0] }
     _ = deleteChats(chatsToDelete)
     refresh_chat_list()
   }
 
+  // Deletes a specific chat
   func Delete(at elem: [String: String]) {
     _ = deleteChats([elem])
     self.chats_previews.removeAll(where: { $0 == elem })
     refresh_chat_list()
   }
 
+  // Creates a duplicate of a chat
   func Duplicate(at elem: [String: String]) {
     _ = duplicateChat(elem)
     refresh_chat_list()
@@ -57,6 +64,7 @@ struct ChatListView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 5) {
       VStack {
+        // List of chat items
         List(selection: $chat_selection) {
           ForEach(chats_previews, id: \.self) { chat_preview in
             NavigationLink(value: chat_preview) {
@@ -67,13 +75,11 @@ struct ChatListView: View {
                 time: String(describing: chat_preview["time"]!),
                 model: String(describing: chat_preview["model"]!),
                 chat: String(describing: chat_preview["chat"]!),
-                //                                chat_selection: $chat_selection,
                 model_size: String(describing: chat_preview["model_size"]!),
                 model_name: $model_name,
                 title: $title,
                 close_chat: close_chat
               )
-              //                                                        .border(Color.green, width: 1)
               .listRowInsets(.init())
               .contextMenu {
                 Button(action: {
@@ -86,25 +92,21 @@ struct ChatListView: View {
                 }) {
                   Text("Remove chat")
                 }
-
               }
             }
           }
           .onDelete(perform: Delete)
         }
-
         .frame(maxHeight: .infinity)
-        //                    .border(Color.red, width: 1)
-        //                    .listStyle(PlainListStyle())
         #if os(macOS)
           .listStyle(.sidebar)
         #else
           .listStyle(InsetListStyle())
         #endif
       }
-      //            .border(/*@START_MENU_TOKEN@*/Color.black/*@END_MENU_TOKEN@*/)
       .background(.opacity(0))
 
+      // Empty state view when no chats exist
       if chats_previews.count <= 0 {
         VStack {
           Button {
@@ -123,7 +125,6 @@ struct ChatListView: View {
           Text("Start new chat")
             .font(.title3)
             .frame(maxWidth: .infinity)
-
         }.opacity(0.4)
           .frame(maxWidth: .infinity, alignment: .center)
       }
@@ -132,6 +133,7 @@ struct ChatListView: View {
       refresh_chat_list()
     }
     .navigationTitle("Chats")
+    // Toolbar with settings and add chat buttons
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
         Menu {
@@ -160,9 +162,9 @@ struct ChatListView: View {
         } label: {
           Image(systemName: "plus")
         }
-
       }
     }
+    // Settings sheet
     .sheet(isPresented: $toggleSettings) {
       SettingsView(current_detail_view_name: $current_detail_view_name).environmentObject(
         fineTuneModel
@@ -171,6 +173,7 @@ struct ChatListView: View {
         .frame(minWidth: 400, minHeight: 600)
       #endif
     }
+    // Add/Edit chat sheet
     .sheet(isPresented: $toggleAddChat) {
       if edit_chat_dialog {
         ChatSettingsView(
@@ -199,16 +202,4 @@ struct ChatListView: View {
   }
 }
 
-//struct ChatListView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ChatListView(tabSelection: .constant(1),
-//                     chat_selected: .constant(false),
-//                     model_name: .constant(""),
-//                     chat_name: .constant(""),
-//                     title: .constant(""),
-//                     add_chat_dialog: .constant(false),
-//                     close_chat:{},
-//                     edit_chat_dialog:.constant(false))
-////            .preferredColorScheme(.dark)
-//    }
-//}
+// Preview commented out for brevity

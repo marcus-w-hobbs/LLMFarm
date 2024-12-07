@@ -8,28 +8,34 @@
 import Inject
 import SwiftUI
 
+/// A view that provides basic configuration options for a chat session, including:
+/// - Chat title and icon selection
+/// - Model settings template selection
 struct BasicSettingsView: View {
-  @ObserveInjection var inject
+  @ObserveInjection var inject  // Enables hot reloading during development
 
-  @Binding var chat_title: String
-  @Binding var model_icon: String
-  @Binding var model_icons: [String]
-  @Binding var model_inferences: [String]
-  @Binding var ggjt_v3_inferences: [String]
-  @Binding var model_inference: String
-  @Binding var ggjt_v3_inference: String
-  @Binding var model_inference_inner: String
-  @Binding var model_settings_template: ChatSettingsTemplate
-  @Binding var model_setting_templates: [ChatSettingsTemplate]
-  @Binding var applying_template: Bool
+  // MARK: - View State
+  @Binding var chat_title: String  // Title displayed for the chat
+  @Binding var model_icon: String  // Currently selected model icon
+  @Binding var model_icons: [String]  // Available model icons to choose from
+  @Binding var model_inferences: [String]  // Available inference backends
+  @Binding var ggjt_v3_inferences: [String]  // GGJT v3 specific inference options
+  @Binding var model_inference: String  // Selected inference backend
+  @Binding var ggjt_v3_inference: String  // Selected GGJT v3 inference option
+  @Binding var model_inference_inner: String  // Internal inference selection state
+  @Binding var model_settings_template: ChatSettingsTemplate  // Currently selected settings template
+  @Binding var model_setting_templates: [ChatSettingsTemplate]  // Available settings templates
+  @Binding var applying_template: Bool  // Whether a template is currently being applied
+
+  // MARK: - Actions
+  /// Callback to apply a selected settings template
   var apply_setting_template: (ChatSettingsTemplate) -> Void
 
   var body: some View {
-
+    // MARK: - Title and Icon Selection
     HStack {
-
+      // Icon picker showing available model icons in a menu
       Picker("", selection: $model_icon) {
-        //                                LazyVGrid(columns: [GridItem(.flexible(minimum: 20, maximum: 50)),GridItem(.flexible(minimum: 20, maximum: 50))], spacing: 5) {
         ForEach(model_icons, id: \.self) { img in
           Image(img + "_48")
             .resizable()
@@ -38,30 +44,26 @@ struct BasicSettingsView: View {
             .frame(width: 48, height: 48)
             .clipShape(Circle())
         }
-        //                                }
       }
       .pickerStyle(.menu)
-
       .frame(maxWidth: 80, alignment: .leading)
       .frame(height: 48)
 
+      // Platform-specific text field for chat title
       #if os(macOS)
+        // macOS uses custom text field that reports when editing ends
         DidEndEditingTextField(text: $chat_title, didEndEditing: { newName in })
           .frame(maxWidth: .infinity, alignment: .leading)
-      //                            .padding([.trailing, .leading, .top])
       #else
+        // iOS uses standard text field
         TextField("Title...", text: $chat_title)
           .frame(maxWidth: .infinity, alignment: .leading)
           .textFieldStyle(.plain)
-      //                            .padding([.trailing, .leading, .top])
       #endif
-
-      //                            Text("Icon:")
-      //                                .frame(maxWidth: .infinity, alignment: .leading)
-
     }
     .padding([.top])
 
+    // MARK: - Settings Template Selection
     HStack {
       Text("Settings template:")
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,49 +81,13 @@ struct BasicSettingsView: View {
     .padding(.horizontal, 5)
     .padding(.top, 8)
     .enableInjection()
-    // Потом надо вернуть, например для выбора между Minicpm, Bunny и т д
-    // HStack{
-    //     Text("Inference:")
-    //         .frame(maxWidth: .infinity, alignment: .leading)
-    //     Picker("", selection: $model_inference) {
-    //         ForEach(model_inferences, id: \.self) {
-    //             Text($0)
-    //         }
-    //     }
-    //     .pickerStyle(.menu)
-    //     //
-    // }
-    // .padding(.horizontal, 5)
-    // .padding(.top, 8)
-    // .onChange(of: model_inference){ inf in
-    //     if model_inference != "ggjt_v3"{
-    //         model_inference_inner = model_inference
-    //     }else{
-    //         model_inference_inner = ggjt_v3_inference
-    //     }
-    // }
 
-    // if model_inference == "ggjt_v3"{
-    //     HStack{
-    //         Text("Inference ggjt_v3:")
-    //             .frame(maxWidth: .infinity, alignment: .leading)
-    //         Picker("", selection: $ggjt_v3_inference) {
-    //             ForEach(ggjt_v3_inferences, id: \.self) {
-    //                 Text($0)
-    //             }
-    //         }
-    //         .pickerStyle(.menu)
-    //         //
-    //     }
-    //     .padding(.horizontal, 5)
-    //     .padding(.top, 8)
-    //     .onChange(of: ggjt_v3_inference){ inf in
-    //         model_inference_inner = ggjt_v3_inference
-    //     }
-    // }
+    // Note: Inference selection UI is currently commented out but preserved for future use
+    // when supporting multiple inference backends like Minicpm, Bunny etc.
   }
 }
 
+// Preview provider commented out but available for testing
 //#Preview {
 //    BasicSettingsView()
 //}

@@ -1,17 +1,22 @@
 //
 //  ChatView.swift
 //
+//  Main view for displaying and interacting with a chat conversation
 //  Created by Guinmoon
 //
 
 import Inject
 import SwiftUI
 
+/// Main view for displaying chat messages and handling user interactions
 struct ChatView: View {
-  @ObserveInjection var inject  // For hot reloading during development
-  @EnvironmentObject var aiChatModel: AIChatModel  // Main chat model
-  @EnvironmentObject var orientationInfo: OrientationInfo  // Device orientation info
+  // MARK: - Properties
 
+  @ObserveInjection var inject  // Enables hot reloading during development
+  @EnvironmentObject var aiChatModel: AIChatModel  // Manages chat state and AI interactions
+  @EnvironmentObject var orientationInfo: OrientationInfo  // Tracks device orientation
+
+  // Default placeholder text for input field
   // #if os(iOS)
   @State var placeholderString: String = "Type your message..."
   @State private var inputText: String = "Type your message..."
@@ -20,37 +25,36 @@ struct ChatView: View {
   //     @State private var inputText: String = ""
   // #endif
 
-  @Binding var modelName: String
-  @Binding var chatSelection: [String: String]?
-  @Binding var title: String
-  var CloseChat: () -> Void
-  @Binding var AfterChatEdit: () -> Void
-  @Binding var addChatDialog: Bool
-  @Binding var editChatDialog: Bool
-  @State var chatStyle: String = "None"
+  // MARK: - Bindings
+
+  @Binding var modelName: String  // Name of the AI model being used
+  @Binding var chatSelection: [String: String]?  // Currently selected chat
+  @Binding var title: String  // Chat title
+  var CloseChat: () -> Void  // Callback to close the chat
+  @Binding var AfterChatEdit: () -> Void  // Callback after editing chat settings
+  @Binding var addChatDialog: Bool  // Controls add chat dialog visibility
+  @Binding var editChatDialog: Bool  // Controls edit chat dialog visibility
+
+  // MARK: - View State
+
+  @State var chatStyle: String = "None"  // Visual style of chat bubbles
   @State private var reloadButtonIcon: String = "arrow.counterclockwise.circle"
   @State private var clearChatButtonIcon: String = "eraser.line.dashed.fill"
+  @State private var scrollProxy: ScrollViewProxy? = nil  // For programmatic scrolling
+  @State private var scrollTarget: Int?  // Target message ID to scroll to
+  @State private var toggleEditChat = false  // Controls edit chat sheet visibility
+  @State private var clearChatAlert = false  // Controls clear chat alert visibility
+  @State private var autoScroll = true  // Whether to auto-scroll to new messages
+  @State private var enableRAG = false  // Enables Retrieval Augmented Generation
+  @FocusState var focusedField: Field?  // Currently focused input field
+  @Namespace var bottomID  // Namespace for scroll animations
 
-  @State private var scrollProxy: ScrollViewProxy? = nil
+  @FocusState private var isInputFieldFocused: Bool
 
-  @State private var scrollTarget: Int?
-  @State private var toggleEditChat = false
-  @State private var clearChatAlert = false
+  // MARK: - Methods
 
-  @State private var autoScroll = true
-  @State private var enableRAG = false
-
-  @FocusState var focusedField: Field?
-
-  @Namespace var bottomID
-
-  //    func after_chat_edit_func(){
-  //        aiChatModel.update_chat_params()
-  //    }
-
-  @FocusState
-  private var isInputFieldFocused: Bool
-
+  /// Scrolls the chat to the bottom
+  /// - Parameter with_animation: Whether to animate the scroll
   func scrollToBottom(with_animation: Bool = false) {
     var scroll_bug = true
     #if os(macOS)
@@ -66,21 +70,19 @@ struct ChatView: View {
     if !autoScroll {
       return
     }
-    let last_msg = aiChatModel.messages.last  // try to fixscrolling and  specialized Array._checkSubscript(_:wasNativeTypeChecked:)
+    let last_msg = aiChatModel.messages.last
     if last_msg != nil && last_msg?.id != nil && scrollProxy != nil {
       if with_animation {
         withAnimation {
-          //                    scrollProxy?.scrollTo(last_msg?.id, anchor: .bottom)
           scrollProxy?.scrollTo("latest")
         }
       } else {
-        //                scrollProxy?.scrollTo(last_msg?.id, anchor: .bottom)
         scrollProxy?.scrollTo("latest")
       }
     }
-
   }
 
+  /// Reloads the current chat data
   func reload() async {
     if chatSelection == nil {
       return
@@ -90,12 +92,15 @@ struct ChatView: View {
     aiChatModel.reload_chat(chatSelection!)
   }
 
+  /// Forces a complete reload of the chat
   func hard_reload_chat() {
     self.aiChatModel.hard_reload_chat()
   }
 
-  private var scrollDownOverlay: some View {
+  // MARK: - Subviews
 
+  /// Overlay button to scroll to bottom of chat
+  private var scrollDownOverlay: some View {
     Button {
       Task {
         autoScroll = true
@@ -112,16 +117,19 @@ struct ChatView: View {
     .buttonStyle(BorderlessButtonStyle())
   }
 
+  /// Debug overlay showing current AI state
   private var debugOverlay: some View {
     Text(String(describing: aiChatModel.state))
       .foregroundColor(.white)
       .frame(width: 185, height: 25)
-      //            .padding([.top, .leading], 5)
       .opacity(0.4)
   }
 
+  // MARK: - Body
+
   var body: some View {
     VStack {
+      // Loading state indicator
       VStack {
         if aiChatModel.state == .loading || aiChatModel.state == .ragIndexLoading
           || aiChatModel.state == .ragSearch
@@ -130,8 +138,7 @@ struct ChatView: View {
             HStack {
               Text(String(describing: aiChatModel.state))
                 .foregroundColor(.accentColor)
-                .frame(width: 200 /*,height: 25*/)
-                //            .padding([.top, .leading], 5)
+                .frame(width: 200)
                 .opacity(0.4)
                 .offset(x: -75, y: 8)
                 .frame(alignment: .leading)
@@ -143,6 +150,8 @@ struct ChatView: View {
           }
         }
       }
+
+      // Main chat message list
       ScrollViewReader { scrollView in
         VStack {
           List {
@@ -156,17 +165,14 @@ struct ChatView: View {
           .textSelection(.enabled)
           .listStyle(PlainListStyle())
           .overlay(scrollDownOverlay, alignment: .bottomTrailing)
-          //                    .overlay(debugOverlay, alignment: .bottomLeading)
         }
         .textSelection(.enabled)
         .onChange(of: aiChatModel.AI_typing) { ai_typing in
           scrollToBottom(with_animation: false)
         }
-
         .disabled(chatSelection == nil)
         .onAppear {
           scrollProxy = scrollView
-          //                    after_chat_edit = after_chat_edit_func
           scrollToBottom(with_animation: false)
         }
       }
@@ -189,6 +195,8 @@ struct ChatView: View {
         focusedField = nil
         autoScroll = false
       }
+
+      // Toolbar buttons
       .toolbar {
         Button {
           Task {
@@ -221,27 +229,23 @@ struct ChatView: View {
             reloadButtonIcon = "checkmark"
             run_after_delay(
               delay: 1200, function: { reloadButtonIcon = "arrow.counterclockwise.circle" })
-            //                        delayIconChange()
           }
         } label: {
           Image(systemName: reloadButtonIcon)
         }
         .disabled(aiChatModel.predicting)
-        //                .font(.title2)
         Button {
           Task {
-            //    add_chat_dialog = true
             toggleEditChat = true
             editChatDialog = true
-            //                        chat_selection = nil
           }
         } label: {
           Image(systemName: "slider.horizontal.3")
         }
-        //                .font(.title2)
       }
       .navigationTitle(aiChatModel.Title)
 
+      // Text input field
       LLMTextInput(
         messagePlaceholder: placeholderString,
         show_attachment_btn: self.aiChatModel.is_mmodal,
@@ -250,9 +254,9 @@ struct ChatView: View {
         enableRAG: $enableRAG
       ).environmentObject(aiChatModel)
         .disabled(self.aiChatModel.chat_name == "")
-      //            .focused($focusedField, equals: .firstName)
-
     }
+
+    // Chat settings sheet
     .sheet(isPresented: $toggleEditChat) {
       ChatSettingsView(
         add_chat_dialog: $toggleEditChat,
@@ -270,6 +274,8 @@ struct ChatView: View {
     .enableInjection()
   }
 }
+
+// MARK: - Preview Provider
 
 //struct ChatView_Previews: PreviewProvider {
 //    static var previews: some View {
