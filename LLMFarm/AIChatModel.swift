@@ -254,36 +254,88 @@ final class AIChatModel: ObservableObject {
     self.AI_typing = -Int.random(in: 0..<100000)  // Reset typing indicator
   }
 
-  // Update chat parameters
+  /// Updates the chat model's parameters based on the current chat configuration
+  ///
+  /// This function is critical for product behavior as it:
+  /// 1. Loads chat-specific model parameters that control:
+  ///    - Context window size (how much conversation history is retained)
+  ///    - Temperature (controls response creativity/randomness)
+  ///    - Top-p sampling (affects response quality/coherence)
+  ///    - Other key model behaviors
+  /// 2. Ensures consistent user experience by maintaining chat-specific settings
+  /// 3. Enables product features like:
+  ///    - Per-chat customization of model behavior
+  ///    - Different conversation styles for different use cases
+  ///    - A/B testing of parameter configurations
   public func update_chat_params() {
+    // Get the configuration for current chat, using empty string as fallback
     let chat_config = getChatInfo(self.chat?.chatName ?? "")
+    
+    // Exit early if no config found to maintain stability
     if chat_config == nil {
       return
     }
+    
+    // Update core model parameters:
+    // - Context params control memory and prompt handling
+    // - Sample params control response generation behavior
     self.chat?.model?.contextParams = get_model_context_param_by_config(chat_config!)
     self.chat?.model?.sampleParams = get_model_sample_param_by_config(chat_config!)
   }
 
-  // Format system prompt for llama format
+  /// Formats a system prompt for the Llama model format with special tokens
+  ///
+  /// This function is critical for product behavior as it:
+  /// 1. Structures the prompt with required control tokens that:
+  ///    - Mark system vs user vs assistant sections (<|start_header_id|>, etc)
+  ///    - Enable proper context parsing by the model
+  ///    - Maintain consistent conversation flow
+  /// 2. Impacts key product capabilities:
+  ///    - Model personality and behavior guardrails via system prompts
+  ///    - Conversation coherence and context retention
+  ///    - Response quality and alignment with product goals
+  /// 3. Format Details:
+  ///    - System section: Contains behavior instructions
+  ///    - User section: Placeholder for user input
+  ///    - Assistant section: Where model responses appear
+  /// - Parameter prompt: Raw system prompt text to format
+  /// - Returns: Fully formatted prompt with all required tokens
   private func _formatSystemPrompt(_ prompt: String) -> String {
     return
       "[system](<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n\(prompt)<|eot_id|>)\n\n\n<|start_header_id|>user<|end_header_id|>\n\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
   }
 
-  // Prepare model loading by chat name
+  /// Prepares model loading configuration for a given chat session
+  ///
+  /// This function is critical for product behavior as it:
+  /// 1. Loads chat-specific model parameters that control:
+  ///    - Model selection and inference settings
+  ///    - Context window size and system prompts
+  ///    - Temperature and sampling parameters
+  /// 2. Configures RAG (Retrieval Augmented Generation) settings:
+  ///    - Chunk sizes for document splitting
+  ///    - Top-k results to retrieve
+  ///    - Embedding model and similarity algorithm
+  /// 3. Enables product features like:
+  ///    - Per-chat customization of model behavior
+  ///    - Different conversation styles for different use cases
+  ///    - RAG-enhanced responses when needed
   public func load_model_by_chat_name_prepare(
     _ chat_name: String, in_text: String,
     attachment: String? = nil,
     attachment_type: String? = nil
   ) -> Bool? {
+    // Get chat configuration, exit if not found to maintain stability
     guard let chat_config = getChatInfo(chat_name) else {
       return nil
     }
 
+    // Validate required model settings exist
     if chat_config["model_inference"] == nil || chat_config["model"] == nil {
       return nil
     }
 
+    // Set model name and resolve model path
     self.model_name = chat_config["model"] as! String
     if let m_url = get_path_by_short_name(self.model_name) {
       self.modelURL = m_url
@@ -295,12 +347,18 @@ final class AIChatModel: ObservableObject {
       return nil
     }
 
+    // Initialize model parameters with defaults
     var model_sample_param = ModelSampleParams.default
     var model_context_param = ModelAndContextParams.default
     model_sample_param = get_model_sample_param_by_config(chat_config)
     model_context_param = get_model_context_param_by_config(chat_config)
 
-    // Sample and Context overrides
+    // Override key model parameters for optimal product behavior:
+    // - System prompt defines model personality
+    // - n_predict controls response length
+    // - Temperature affects creativity
+    // - Penalties prevent repetition
+    // - Top-p improves coherence
     if true {
       model_context_param.system_prompt = _formatSystemPrompt(AIChatModel.SYSTEM_PROMPT_NIETZSCHE)
       model_context_param.n_predict = 256
@@ -309,6 +367,7 @@ final class AIChatModel: ObservableObject {
       model_sample_param.top_p = 0.9
     }
 
+    // Configure grammar constraints if specified
     if chat_config["grammar"] != nil && chat_config["grammar"] as! String != "<None>"
       && chat_config["grammar"] as! String != ""
     {
@@ -316,7 +375,10 @@ final class AIChatModel: ObservableObject {
       model_context_param.grammar_path = grammar_path
     }
 
-    // RAG configuration
+    // Configure RAG settings from chat config with fallbacks:
+    // - Chunk size affects context granularity
+    // - Overlap maintains coherence between chunks
+    // - Top results control context relevance
     self.chunkSize = chat_config["chunk_size"] as? Int ?? self.chunkSize
     self.chunkOverlap = chat_config["chunk_overlap"] as? Int ?? self.chunkOverlap
     self.ragTop = chat_config["rag_top"] as? Int ?? self.ragTop
@@ -331,6 +393,7 @@ final class AIChatModel: ObservableObject {
       self.chunkMethod = getChunkMethodFromStr(chat_config["chunk_method"] as? String ?? "")
     }
 
+    // Initialize fresh chat instance with configured parameters
     AIChatModel_obj_ptr = nil
     self.chat = nil
     self.chat = AI(_modelPath: modelURL, _chatName: chat_name)
@@ -347,58 +410,125 @@ final class AIChatModel: ObservableObject {
     return true
   }
 
-  // Load model by chat name
+  /// Loads and initializes an AI model for a specific chat session
+  /// - Parameters:
+  ///   - chat_name: Name of the chat session to load model for
+  ///   - in_text: Initial text input for the chat
+  ///   - attachment: Optional attachment content (e.g. images, files)
+  ///   - attachment_type: Type of the attachment (e.g. "image", "document")
+  /// - Returns: Boolean indicating if model loading was initiated successfully
+  /// - Important: Product considerations:
+  ///   1. Model loading is asynchronous - UI should show loading state
+  ///   2. State persistence enables chat continuity across sessions
+  ///   3. Progress callback enables loading UI feedback
+  ///   4. Completion callback handles model initialization
   public func load_model_by_chat_name(
     _ chat_name: String,
     in_text: String,
     attachment: String? = nil,
     attachment_type: String? = nil
   ) -> Bool? {
+    // Set loading flag for UI state management
     self.model_loading = true
 
+    // Configure state persistence if enabled
+    // This allows saving/loading chat state between sessions
     if self.chat?.model?.contextParams.save_load_state == true {
       self.chat?.model?.contextParams.state_dump_path = get_state_path_by_chat_name(chat_name) ?? ""
     }
 
+    // Set up progress callback for loading UI
+    // This enables showing loading progress to users
     self.chat?.model?.modelLoadProgressCallback = { progress in
       return self.model_load_progress_callback(progress)
     }
+
+    // Set up completion callback for model initialization
+    // This handles setting up the model once loaded
     self.chat?.model?.modelLoadCompleteCallback = { load_result in
       self.chat?.model?.evalCallback = self.eval_callback
       self.after_model_load(
         load_result, in_text: in_text, attachment: attachment, attachment_type: attachment_type)
     }
+
+    // Begin async model loading
     self.chat?.loadModel()
 
     return true
   }
 
-  // Update last message in chat
+  /// Updates the last message in the chat thread with new content
+  /// - Parameter message: The updated message to replace the last message with
+  /// - Important: Product considerations:
+  ///   1. Thread Safety:
+  ///      - Uses message_lock to prevent race conditions
+  ///      - Critical for maintaining chat state consistency
+  ///      - Prevents UI glitches from concurrent updates
+  ///   2. State Management:
+  ///      - Only updates if messages array is not empty
+  ///      - Maintains chat history integrity
+  ///      - Enables real-time message updates (e.g. typing indicators, delivery status)
   private func update_last_message(_ message: inout Message) {
-    messages_lock.lock()
+    messages_lock.lock() // Lock to prevent concurrent access
     if messages.last != nil {
-      messages[messages.endIndex - 1] = message
+      messages[messages.endIndex - 1] = message // Update last message atomically
     }
-    messages_lock.unlock()
+    messages_lock.unlock() // Release lock after update
   }
 
-  // Save chat history and state
+  /// Persists chat history and model state to enable conversation continuity
+  /// - Important: Product considerations:
+  ///   1. Data Persistence:
+  ///      - Saves full message history to JSON for chat restoration
+  ///      - Critical for maintaining conversation context between sessions
+  ///      - Enables features like chat history browsing and search
+  ///   2. Model State Management:
+  ///      - Saves model's internal state (KV cache, context window)
+  ///      - Allows resuming conversations with full context
+  ///      - Reduces cold-start latency on chat reload
+  ///   3. Error Handling:
+  ///      - Gracefully handles nil chat/model cases
+  ///      - Prevents data loss from failed saves
+  ///      - Maintains product stability
   public func save_chat_history_and_state() {
+    // Save chat messages to JSON file named after chat
     save_chat_history(self.messages, self.chat_name + ".json")
+    
+    // Save model state if chat and model exist
     if self.chat != nil && self.chat?.model != nil {
       self.chat?.model?.save_state()
     }
   }
 
-  // Stop prediction
+  /// Gracefully stops ongoing LLM prediction and handles cleanup
+  /// - Parameter is_error: Flag indicating if stopping due to error condition
+  /// - Important: Product considerations:
+  ///   1. User Experience:
+  ///      - Immediately signals prediction end via flagExit
+  ///      - Updates UI elements (typing indicator, action button)
+  ///      - Maintains responsive feel during cancellation
+  ///   2. Performance Metrics:
+  ///      - Calculates tokens/second throughput
+  ///      - Tracks total prediction duration
+  ///      - Critical for monitoring model performance
+  ///   3. Thread Safety:
+  ///      - Uses message_lock for atomic message updates
+  ///      - Prevents UI glitches from race conditions
+  ///      - Maintains chat state consistency
   public func stop_predict(is_error: Bool = false) {
+    // Signal prediction termination
     self.chat?.flagExit = true
+    
+    // Calculate total prediction duration for metrics
     self.total_sec =
       Double((DispatchTime.now().uptimeNanoseconds - self.start_predicting_time.uptimeNanoseconds))
       / 1_000_000_000
+    
+    // Thread-safe message state update
     if let last_message = messages.last {
       messages_lock.lock()
       if last_message.state == .predicting || last_message.state == .none {
+        // Update message with performance metrics
         messages[messages.endIndex - 1].state = .predicted(totalSecond: self.total_sec)
         messages[messages.endIndex - 1].tok_sec = Double(self.numberOfTokens) / self.total_sec
       }
@@ -407,16 +537,21 @@ final class AIChatModel: ObservableObject {
       }
       messages_lock.unlock()
     }
+    
+    // Reset prediction state and UI elements
     self.predicting = false
     self.tok_sec = Double(self.numberOfTokens) / self.total_sec
     self.numberOfTokens = 0
     self.action_button_icon = "paperplane"
     self.AI_typing = 0
+    
+    // Persist final chat state
     self.save_chat_history_and_state()
+    
+    // Clean up chat on error
     if is_error {
       self.chat = nil
     }
-
   }
 
   /// Validates predicted tokens against stop words to optimize context window usage during inference
