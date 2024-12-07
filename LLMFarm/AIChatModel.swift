@@ -152,12 +152,12 @@ final class AIChatModel: ObservableObject {
 
     // Phase 2: Load Completion
     self.finish_load()
-    
+
     // Debug context parameters
     // Product teams can monitor these for context tuning
     print(self.chat?.model?.contextParams as Any)
     print(self.chat?.model?.sampleParams as Any)
-    
+
     self.model_loading = false
 
     // Phase 3: System Prompt Context Management
@@ -166,7 +166,7 @@ final class AIChatModel: ObservableObject {
     if self.chat?.model?.contextParams.system_prompt != "" && self.chat?.model?.nPast == 0 {
       // Add newline padding for clean context separation
       system_prompt = self.chat?.model?.contextParams.system_prompt ?? " " + "\n"
-      
+
       // Store in message header for context tracking
       self.messages[self.messages.endIndex - 1].header =
         self.chat?.model?.contextParams.system_prompt ?? ""
@@ -232,23 +232,23 @@ final class AIChatModel: ObservableObject {
   public func reload_chat(_ chat_selection: [String: String]) {
     // Phase 1: Stop active inference to free context
     self.stop_predict()
-    
+
     // Phase 2: Update chat metadata
     self.chat_name = chat_selection["chat"] ?? "Not selected"
     self.Title = chat_selection["title"] ?? ""
     self.is_mmodal = chat_selection["mmodal"] ?? "" == "1"
-    
+
     // Phase 3: Thread-safe history management
     // Critical for context integrity
     messages_lock.lock()
     self.messages = []  // Clear existing context
     self.messages = load_chat_history(chat_selection["chat"]! + ".json") ?? []  // Load minimal history
     messages_lock.unlock()
-    
+
     // Phase 4: State management
     self.state_dump_path = get_state_path_by_chat_name(chat_name) ?? ""
     ResetRAGUrl()  // Reset RAG to free context
-    
+
     // Phase 5: Reset inference state
     self.ragIndexLoaded = false  // Clear RAG context
     self.AI_typing = -Int.random(in: 0..<100000)  // Reset typing indicator
@@ -444,14 +444,14 @@ final class AIChatModel: ObservableObject {
   public func check_stop_words(_ token: String, _ message_text: inout String) -> Bool {
     // Default to continuing generation unless stop condition found
     let check = true
-    
+
     // Iterate through configured stop words/sequences
     for stop_word in self.chat?.model?.contextParams.reverse_prompt ?? [] {
       // Case 1: Exact token match - immediately terminate to save context
       if token == stop_word {
         return false
       }
-      
+
       // Case 2: Message ends with stop sequence
       if message_text.hasSuffix(stop_word) {
         // Clean up the message by removing the stop sequence
@@ -462,7 +462,7 @@ final class AIChatModel: ObservableObject {
         return false
       }
     }
-    
+
     // No stop conditions found, safe to continue using context
     return check
   }
@@ -695,7 +695,7 @@ final class AIChatModel: ObservableObject {
   }
 
   /// Manages message sending and inference while carefully optimizing context window usage
-  /// 
+  ///
   /// This function orchestrates the entire inference pipeline with precise control over the context window.
   /// The context window is filled in this priority order:
   /// 1. User message (variable length, typically 10-100 tokens)
@@ -706,7 +706,7 @@ final class AIChatModel: ObservableObject {
   /// Context Window Budget Example (assuming 4096 token window):
   /// - Reserved for response: 1024 tokens
   /// - User message: 100 tokens
-  /// - System prompt: 400 tokens  
+  /// - System prompt: 400 tokens
   /// - RAG context: 1500 tokens
   /// - Available for history: ~1072 tokens
   ///

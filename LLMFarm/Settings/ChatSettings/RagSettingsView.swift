@@ -5,6 +5,22 @@
 //  Created by guinmoon on 20.10.2024.
 //
 
+// RagSettingsView provides a comprehensive interface for configuring and managing RAG (Retrieval Augmented Generation)
+// settings in the LLM inference pipeline. It allows fine-grained control over:
+//
+// - Text chunking parameters for optimal context window utilization
+// - Embedding model selection for semantic search
+// - Similarity metrics for retrieval accuracy
+// - Text splitting strategies for context preservation
+// - Real-time index building and testing
+//
+// The view is designed to help product engineers optimize the RAG pipeline by providing:
+// 1. Direct control over chunk size/overlap to manage token usage
+// 2. Multiple embedding models to balance speed vs accuracy
+// 3. Various similarity metrics to tune retrieval precision
+// 4. Debug tools to test and validate the RAG setup
+// 5. Real-time search testing to verify retrieval quality
+
 import SimilaritySearchKit
 import SimilaritySearchKitDistilbert
 import SimilaritySearchKitMiniLMAll
@@ -12,22 +28,26 @@ import SimilaritySearchKitMiniLMMultiQA
 import SwiftUI
 
 struct RagSettingsView: View {
+  // Directory path for storing RAG index and documents
   @State var ragDir: String
 
+  // Debug search input and results
   @State var inputText: String = ""
-  var searchUrl: URL
-  var ragUrl: URL
-  var searchResultsCount: Int = 3
-  @State var loadIndexResult: String = ""
-  @State var searchResults: String = ""
+  var searchUrl: URL  // URL for document storage
+  var ragUrl: URL  // URL for index storage
+  var searchResultsCount: Int = 3  // Number of results to return in debug mode
+  @State var loadIndexResult: String = ""  // Status message for index operations
+  @State var searchResults: String = ""  // Debug search results
 
-  @Binding private var chunkSize: Int
-  @Binding private var chunkOverlap: Int
-  @Binding private var currentModel: EmbeddingModelType
-  @Binding private var comparisonAlgorithm: SimilarityMetricType
-  @Binding private var chunkMethod: TextSplitterType
-  @Binding private var ragTop: Int
+  // Core RAG configuration parameters
+  @Binding private var chunkSize: Int  // Size of text chunks in tokens
+  @Binding private var chunkOverlap: Int  // Overlap between chunks to preserve context
+  @Binding private var currentModel: EmbeddingModelType  // Model for semantic embeddings
+  @Binding private var comparisonAlgorithm: SimilarityMetricType  // Similarity calculation method
+  @Binding private var chunkMethod: TextSplitterType  // Text splitting strategy
+  @Binding private var ragTop: Int  // Max number of relevant chunks to retrieve
 
+  // Initialize view with all required RAG parameters
   init(
     ragDir: String,
     chunkSize: Binding<Int>,
@@ -38,12 +58,16 @@ struct RagSettingsView: View {
     ragTop: Binding<Int>
   ) {
     self.ragDir = ragDir
+
+    // Configure storage paths for documents and index
     self.ragUrl =
       FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
       .appendingPathComponent(ragDir) ?? URL(fileURLWithPath: "")
     self.searchUrl =
       FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
       .appendingPathComponent(ragDir + "/docs") ?? URL(fileURLWithPath: "")
+
+    // Bind all RAG configuration parameters
     self._chunkSize = chunkSize
     self._chunkOverlap = chunkOverlap
     self._currentModel = currentModel
@@ -59,6 +83,7 @@ struct RagSettingsView: View {
           label:
             Text("RAG Settings")
         ) {
+          // Chunk size control - critical for managing token usage
           HStack {
             Text("Chunk Size:")
               .frame(maxWidth: 100, alignment: .leading)
@@ -70,8 +95,8 @@ struct RagSettingsView: View {
                 .keyboardType(.numbersAndPunctuation)
               #endif
           }
-          //                    .padding(.horizontal, 5)
 
+          // Chunk overlap - ensures context preservation between chunks
           HStack {
             Text("Chunk Overlap:")
               .frame(maxWidth: 100, alignment: .leading)
@@ -83,8 +108,8 @@ struct RagSettingsView: View {
                 .keyboardType(.numbersAndPunctuation)
               #endif
           }
-          //                    .padding(.horizontal, 5)
 
+          // Embedding model selection for semantic search
           HStack {
             Text("Embedding Model:")
               .frame(maxWidth: 100, alignment: .leading)
@@ -97,6 +122,7 @@ struct RagSettingsView: View {
             .pickerStyle(.menu)
           }
 
+          // Similarity metric for tuning retrieval precision
           HStack {
             Text("Similarity Metric:")
               .frame(maxWidth: 120, alignment: .leading)
@@ -109,6 +135,7 @@ struct RagSettingsView: View {
             .pickerStyle(.menu)
           }
 
+          // Text splitting strategy selection
           HStack {
             Text("Text Splitter:")
               .frame(maxWidth: 120, alignment: .leading)
@@ -121,6 +148,7 @@ struct RagSettingsView: View {
             .pickerStyle(.menu)
           }
 
+          // Maximum number of chunks to retrieve
           HStack {
             Text("Max RAG answers count:")
               .frame(maxWidth: 100, alignment: .leading)
@@ -134,8 +162,8 @@ struct RagSettingsView: View {
           }
 
         }
-        //                .padding(.horizontal, 1)
 
+        // Debug tools for testing and validation
         GroupBox(
           label:
             Text("RAG Debug")
@@ -169,8 +197,8 @@ struct RagSettingsView: View {
           }
 
           Text(loadIndexResult)
-          //                        .padding(.top)
 
+          // Search input field for testing retrieval
           TextField("Search text", text: $inputText, axis: .vertical)
             .onSubmit {
               Task {
@@ -197,19 +225,6 @@ struct RagSettingsView: View {
             }
             .lineLimit(1...5)
 
-          //                    Button(
-          //                        action: {
-          //                            Task{
-          //                                await Search()
-          //                            }
-          //                        },
-          //                        label: {
-          //                            Text("Search")
-          //                                .font(.title2)
-          //                        }
-          //                    )
-          //                    .padding()
-
           Button(
             action: {
               Task {
@@ -221,19 +236,17 @@ struct RagSettingsView: View {
                 .font(.title2)
             }
           )
-          //                    .padding()
 
           Text(searchResults)
             .padding()
             .textSelection(.enabled)
         }
-        //                .padding(.horizontal, 1)
 
       }
-      //            .padding()
     }
   }
 
+  // Rebuilds the RAG index with current settings and measures performance
   func BuildIndex(ragURL: URL) async {
     let start = DispatchTime.now()
     updateIndexComponents(
@@ -243,13 +256,14 @@ struct RagSettingsView: View {
       searchUrl: searchUrl,
       chunkSize: chunkSize,
       chunkOverlap: chunkOverlap)
-    let end = DispatchTime.now()  // конец замера времени
-    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds  // наносекунды
-    let timeInterval = Double(nanoTime) / 1_000_000_000  // преобразуем в секунды
+    let end = DispatchTime.now()
+    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
+    let timeInterval = Double(nanoTime) / 1_000_000_000
     loadIndexResult = String(timeInterval) + " sec"
     saveIndex(url: ragURL, name: "RAG_index")
   }
 
+  // Loads existing index with current similarity settings
   func LoadIndex(ragURL: URL) async {
     updateIndexComponents(
       currentModel: currentModel, comparisonAlgorithm: comparisonAlgorithm, chunkMethod: chunkMethod
@@ -258,12 +272,13 @@ struct RagSettingsView: View {
     loadIndexResult = "Loaded"
   }
 
+  // Performs test search and measures retrieval time
   func Search() async {
     let start = DispatchTime.now()
     let results = await searchIndexWithQuery(query: inputText, top: searchResultsCount)
-    let end = DispatchTime.now()  // конец замера времени
-    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds  // наносекунды
-    let timeInterval = Double(nanoTime) / 1_000_000_000  // преобразуем в секунды
+    let end = DispatchTime.now()
+    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
+    let timeInterval = Double(nanoTime) / 1_000_000_000
 
     searchResults = String(describing: results)
     print(results)
@@ -271,12 +286,13 @@ struct RagSettingsView: View {
     print("Search time: \(timeInterval) sec")
   }
 
+  // Generates LLM prompt from retrieved chunks for testing
   func GeneratePrompt() async {
     let start = DispatchTime.now()
     let results = await searchIndexWithQuery(query: inputText, top: searchResultsCount)
-    let end = DispatchTime.now()  // конец замера времени
-    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds  // наносекунды
-    let timeInterval = Double(nanoTime) / 1_000_000_000  // преобразуем в секунды
+    let end = DispatchTime.now()
+    let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
+    let timeInterval = Double(nanoTime) / 1_000_000_000
 
     if results == nil {
       return

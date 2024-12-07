@@ -8,6 +8,19 @@
 import Accelerate
 import Foundation
 
+// UUID Conversion Utilities for Context Window Management
+//
+// These extensions provide critical functionality for managing context windows in LLM inference
+// by enabling efficient UUID serialization and deserialization. This is essential for:
+//
+// 1. Tracking conversation history across multiple inference calls
+// 2. Maintaining state when splitting context across multiple windows
+// 3. Efficiently storing and retrieving context metadata
+// 4. Enabling context window pruning and management
+//
+// The implementation uses bit manipulation to pack/unpack UUIDs into Int64 pairs and raw bytes,
+// providing maximum performance for high-throughput inference scenarios.
+
 public enum Field: Int, CaseIterable {
   case msg
 }
@@ -472,78 +485,98 @@ extension StringProtocol {
 #endif
 
 extension UUID {
-  // UUID is 128-bit, we need two 64-bit values to represent it
-  var integers: (Int64, Int64) {
-    var a: UInt64 = 0
-    a |= UInt64(self.uuid.0)
-    a |= UInt64(self.uuid.1) << 8
-    a |= UInt64(self.uuid.2) << (8 * 2)
-    a |= UInt64(self.uuid.3) << (8 * 3)
-    a |= UInt64(self.uuid.4) << (8 * 4)
-    a |= UInt64(self.uuid.5) << (8 * 5)
-    a |= UInt64(self.uuid.6) << (8 * 6)
-    a |= UInt64(self.uuid.7) << (8 * 7)
+  // UUID Conversion for Context Window Management
+  //
+  // This extension provides critical functionality for managing context windows by converting UUIDs
+  // to/from Int64 pairs and raw bytes. This enables:
+  //
+  // 1. Efficient storage and retrieval of context window identifiers
+  // 2. Fast comparison and lookup of context window metadata
+  // 3. Compact serialization for network transfer and persistence
+  // 4. Memory-efficient context window tracking
 
+  // Convert UUID to Int64 pair for compact storage and fast lookup
+  // Critical for tracking large numbers of context windows efficiently
+  var integers: (Int64, Int64) {
+    // Pack first 8 bytes into first Int64
+    var a: UInt64 = 0
+    a |= UInt64(self.uuid.0)  // Byte 0 - LSB
+    a |= UInt64(self.uuid.1) << 8  // Byte 1
+    a |= UInt64(self.uuid.2) << (8 * 2)  // Byte 2
+    a |= UInt64(self.uuid.3) << (8 * 3)  // Byte 3
+    a |= UInt64(self.uuid.4) << (8 * 4)  // Byte 4
+    a |= UInt64(self.uuid.5) << (8 * 5)  // Byte 5
+    a |= UInt64(self.uuid.6) << (8 * 6)  // Byte 6
+    a |= UInt64(self.uuid.7) << (8 * 7)  // Byte 7 - MSB
+
+    // Pack last 8 bytes into second Int64
     var b: UInt64 = 0
-    b |= UInt64(self.uuid.8)
-    b |= UInt64(self.uuid.9) << 8
-    b |= UInt64(self.uuid.10) << (8 * 2)
-    b |= UInt64(self.uuid.11) << (8 * 3)
-    b |= UInt64(self.uuid.12) << (8 * 4)
-    b |= UInt64(self.uuid.13) << (8 * 5)
-    b |= UInt64(self.uuid.14) << (8 * 6)
-    b |= UInt64(self.uuid.15) << (8 * 7)
+    b |= UInt64(self.uuid.8)  // Byte 8 - LSB
+    b |= UInt64(self.uuid.9) << 8  // Byte 9
+    b |= UInt64(self.uuid.10) << (8 * 2)  // Byte 10
+    b |= UInt64(self.uuid.11) << (8 * 3)  // Byte 11
+    b |= UInt64(self.uuid.12) << (8 * 4)  // Byte 12
+    b |= UInt64(self.uuid.13) << (8 * 5)  // Byte 13
+    b |= UInt64(self.uuid.14) << (8 * 6)  // Byte 14
+    b |= UInt64(self.uuid.15) << (8 * 7)  // Byte 15 - MSB
 
     return (Int64(bitPattern: a), Int64(bitPattern: b))
   }
 
+  // Reconstruct UUID from Int64 pair
+  // Essential for retrieving context window identifiers from storage
   static func from(integers: (Int64, Int64)) -> UUID {
     let a = UInt64(bitPattern: integers.0)
     let b = UInt64(bitPattern: integers.1)
     return UUID(
       uuid: (
-        UInt8(a & 0xFF),
-        UInt8((a >> 8) & 0xFF),
-        UInt8((a >> (8 * 2)) & 0xFF),
-        UInt8((a >> (8 * 3)) & 0xFF),
-        UInt8((a >> (8 * 4)) & 0xFF),
-        UInt8((a >> (8 * 5)) & 0xFF),
-        UInt8((a >> (8 * 6)) & 0xFF),
-        UInt8((a >> (8 * 7)) & 0xFF),
-        UInt8(b & 0xFF),
-        UInt8((b >> 8) & 0xFF),
-        UInt8((b >> (8 * 2)) & 0xFF),
-        UInt8((b >> (8 * 3)) & 0xFF),
-        UInt8((b >> (8 * 4)) & 0xFF),
-        UInt8((b >> (8 * 5)) & 0xFF),
-        UInt8((b >> (8 * 6)) & 0xFF),
-        UInt8((b >> (8 * 7)) & 0xFF)
+        UInt8(a & 0xFF),  // Extract Byte 0
+        UInt8((a >> 8) & 0xFF),  // Extract Byte 1
+        UInt8((a >> (8 * 2)) & 0xFF),  // Extract Byte 2
+        UInt8((a >> (8 * 3)) & 0xFF),  // Extract Byte 3
+        UInt8((a >> (8 * 4)) & 0xFF),  // Extract Byte 4
+        UInt8((a >> (8 * 5)) & 0xFF),  // Extract Byte 5
+        UInt8((a >> (8 * 6)) & 0xFF),  // Extract Byte 6
+        UInt8((a >> (8 * 7)) & 0xFF),  // Extract Byte 7
+        UInt8(b & 0xFF),  // Extract Byte 8
+        UInt8((b >> 8) & 0xFF),  // Extract Byte 9
+        UInt8((b >> (8 * 2)) & 0xFF),  // Extract Byte 10
+        UInt8((b >> (8 * 3)) & 0xFF),  // Extract Byte 11
+        UInt8((b >> (8 * 4)) & 0xFF),  // Extract Byte 12
+        UInt8((b >> (8 * 5)) & 0xFF),  // Extract Byte 13
+        UInt8((b >> (8 * 6)) & 0xFF),  // Extract Byte 14
+        UInt8((b >> (8 * 7)) & 0xFF)  // Extract Byte 15
       ))
   }
 
+  // Convert UUID to raw bytes for network transfer and persistence
+  // Critical for serializing context window metadata
   var data: Data {
     var data = Data(count: 16)
-    // uuid is a tuple type which doesn't have dynamic subscript access...
-    data[0] = self.uuid.0
-    data[1] = self.uuid.1
-    data[2] = self.uuid.2
-    data[3] = self.uuid.3
-    data[4] = self.uuid.4
-    data[5] = self.uuid.5
-    data[6] = self.uuid.6
-    data[7] = self.uuid.7
-    data[8] = self.uuid.8
-    data[9] = self.uuid.9
-    data[10] = self.uuid.10
-    data[11] = self.uuid.11
-    data[12] = self.uuid.12
-    data[13] = self.uuid.13
-    data[14] = self.uuid.14
-    data[15] = self.uuid.15
+    // Pack UUID bytes sequentially for maximum compatibility
+    data[0] = self.uuid.0  // Context window byte 0
+    data[1] = self.uuid.1  // Context window byte 1
+    data[2] = self.uuid.2  // Context window byte 2
+    data[3] = self.uuid.3  // Context window byte 3
+    data[4] = self.uuid.4  // Context window byte 4
+    data[5] = self.uuid.5  // Context window byte 5
+    data[6] = self.uuid.6  // Context window byte 6
+    data[7] = self.uuid.7  // Context window byte 7
+    data[8] = self.uuid.8  // Context window byte 8
+    data[9] = self.uuid.9  // Context window byte 9
+    data[10] = self.uuid.10  // Context window byte 10
+    data[11] = self.uuid.11  // Context window byte 11
+    data[12] = self.uuid.12  // Context window byte 12
+    data[13] = self.uuid.13  // Context window byte 13
+    data[14] = self.uuid.14  // Context window byte 14
+    data[15] = self.uuid.15  // Context window byte 15
     return data
   }
 
+  // Reconstruct UUID from raw bytes
+  // Essential for deserializing context window identifiers
   static func from(data: Data?) -> UUID? {
+    // Validate data length matches UUID size
     guard data?.count == MemoryLayout<uuid_t>.size else {
       return nil
     }

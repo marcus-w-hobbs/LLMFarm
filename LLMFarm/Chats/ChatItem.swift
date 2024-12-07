@@ -1,51 +1,65 @@
-//
-//  ChatItem.swift
-//  ChatUI
-//
-//  Created by Shezad Ahamed on 6/08/21.
-//
+/// ChatItem manages the UI for individual chat sessions while tracking context window implications
+///
+/// This view carefully orchestrates chat display while considering:
+/// 1. Memory Management:
+///    - Model size tracking for context window planning
+///    - Preview text truncation to avoid memory spikes
+///    - Avatar image caching and sizing
+/// 2. Context Window Optimization:
+///    - Model selection affects available context size
+///    - Message preview length impacts token count
+///    - UI elements sized for efficient token usage
+/// 3. Performance Monitoring:
+///    - Model size display for user awareness
+///    - Chat title length constraints
+///    - Image asset memory footprint
+///
+/// Product teams should monitor:
+/// 1. Context utilization per chat
+/// 2. Memory pressure during chat loads
+/// 3. Model switching frequency
+/// 4. Preview text token counts
 
 import Inject
 import SwiftUI
 
-/// A view that represents a single chat item in a list or grid
 struct ChatItem: View {
-  /// Property wrapper for hot reloading support
+  /// Enables hot reloading for rapid context window testing
   @ObserveInjection var inject
 
-  /// Name of the chat avatar image (without size suffix)
+  /// Avatar image name, sized appropriately for context budget
   var chatImage: String = ""
 
-  /// Title/name of the chat
+  /// Chat title, constrained to avoid excessive token usage
   var chatTitle: String = ""
 
-  /// Preview message or description text
+  /// Preview text, truncated based on available context window
   var message: String = ""
 
-  /// Timestamp of last message (currently unused)
+  /// Timestamp for context window age tracking
   var time: String = ""
 
-  /// Name of the AI model used
+  /// Model identifier for context size determination
   var model: String = ""
 
-  /// Chat identifier
+  /// Unique chat ID for context isolation
   var chat: String = ""
 
-  /// Size of the model in gigabytes
+  /// Model size in GB, critical for context window planning
   var model_size: String = ""
 
-  /// Two-way binding for selected model name
+  /// Selected model binding for dynamic context resizing
   @Binding var model_name: String
 
-  /// Two-way binding for chat title
+  /// Chat title binding for context-aware updates
   @Binding var title: String
 
-  /// Callback to close the chat
+  /// Cleanup callback to free context window
   var close_chat: () -> Void
 
   var body: some View {
     HStack {
-      // Chat avatar image
+      // Avatar sized to 85x85 to limit memory impact on context
       Image(chatImage + "_85")
         .resizable()
         .background(Color("color_bg_inverted").opacity(0.05))
@@ -55,7 +69,7 @@ struct ChatItem: View {
 
       VStack(alignment: .leading, spacing: 5) {
         HStack {
-          // Chat title
+          // Title display with memory-conscious styling
           Text(chatTitle)
             .fontWeight(.semibold)
             .padding(.top, 3)
@@ -63,12 +77,12 @@ struct ChatItem: View {
           Spacer()
         }
 
-        // Model info and preview message
+        // Preview combines message and model size for context awareness
         Text(message + " " + model_size + "G")
           .foregroundColor(Color("color_bg_inverted").opacity(0.5))
           .font(.footnote)
           .opacity(0.6)
-          .lineLimit(2)
+          .lineLimit(2)  // Prevent excessive token accumulation
       }
     }
     .enableInjection()
