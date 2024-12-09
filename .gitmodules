@@ -11,3 +11,5 @@
 	path = similarity-search-kit
 	url = https://github.com/guinmoon/similarity-search-kit
 	branch = dev
+[submodule "/Users/marcushobbs/Documents/AI/LLMFarm-marcus-w-hobbs/llmfarm_core.swift"]
+	url = https://github.com/marcus-w-hobbs/llmfarm_core.swift.git
